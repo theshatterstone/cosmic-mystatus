@@ -1,8 +1,7 @@
-// SPDX-License-Identifier: GPL-3.0-only
-
 use cosmic::app::{Core, Task};
 use cosmic::iced::{Element, Subscription};
 use cosmic::iced::widget::text;
+use cosmic::Theme;
 use std::process::Command;
 use std::time::Duration;
 
@@ -58,13 +57,15 @@ impl cosmic::Application for YourApp {
     }
 
     fn update(&mut self, message: Message) -> Task<Self::Message> {
-        if let Message::Tick = message {
-            self.update_output();
+        match message {
+            Message::Tick => {
+                self.update_output();
+            }
         }
         Task::none()
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> cosmic::iced_core::Element<'_, Self::Message, cosmic::Theme, iced_tiny_skia::Renderer> {
         text(&self.command_output).into()
     }
 }
