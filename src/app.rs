@@ -6,51 +6,29 @@ use cosmic::iced::Limits;
 use cosmic::iced_winit::commands::popup::{destroy_popup, get_popup};
 use cosmic::widget::{self, settings};
 use cosmic::{Application, Element};
-
 use std::process::Command;
 use tokio::time::{interval, Duration};
 
-
-use crate::fl;
-
-/// This is the struct that represents your application.
-/// It is used to define the data that will be used by your application.
 #[derive(Default)]
 pub struct YourApp {
-    /// Application state which is managed by the COSMIC runtime.
     core: Core,
-    /// The popup id.
     popup: Option<Id>,
-    /// Example row toggler.
     example_row: bool,
-    command_output: String, // New field for storing output
+    command_output: String,
 }
 
-/// This is the enum that contains all the possible variants that your application will need to transmit messages.
-/// This is used to communicate between the different parts of your application.
-/// If your application does not need to send messages, you can use an empty enum or `()`.
 #[derive(Debug, Clone)]
 pub enum Message {
     TogglePopup,
     PopupClosed(Id),
     ToggleExampleRow(bool),
+    UpdateOutput(String),
 }
 
-/// Implement the `Application` trait for your application.
-/// This is where you define the behavior of your application.
-///
-/// The `Application` trait requires you to define the following types and constants:
-/// - `Executor` is the async executor that will be used to run your application's commands.
-/// - `Flags` is the data that your application needs to use before it starts.
-/// - `Message` is the enum that contains all the possible variants that your application will need to transmit messages.
-/// - `APP_ID` is the unique identifier of your application.
 impl Application for YourApp {
     type Executor = cosmic::executor::Default;
-
-    type Flags = ();
-
+    type Flags = (); 
     type Message = Message;
-
     const APP_ID: &'static str = "com.example.CosmicAppletTemplate";
 
     fn core(&self) -> &Core {
@@ -61,37 +39,30 @@ impl Application for YourApp {
         &mut self.core
     }
 
-    /// This is the entry point of your application, it is where you initialize your application.
-    ///
-    /// Any work that needs to be done before the application starts should be done here.
-    ///
-    /// - `core` is used to passed on for you by libcosmic to use in the core of your own application.
-    /// - `flags` is used to pass in any data that your application needs to use before it starts.
-    /// - `Command` type is used to send messages to your application. `Command::none()` can be used to send no messages to your application.
     fn init(core: Core, _flags: Self::Flags) -> (Self, Task<Self::Message>) {
         let mut app = YourApp {
             core,
             command_output: "Fetching...".to_string(),
             ..Default::default()
         };
-    
+
         let handle = app.core.applet.handle().clone();
         tokio::spawn(async move {
-            let mut timer = interval(Duration::from_secs(5)); // Update every 5 seconds
+            let mut timer = interval(Duration::from_secs(5));
             loop {
                 timer.tick().await;
-                let output = Command::new("i3status") // Replace "date" with your command
+                let output = Command::new("i3status")
                     .output()
                     .ok()
                     .and_then(|o| String::from_utf8(o.stdout).ok())
                     .unwrap_or_else(|| "Error".to_string());
-    
+
                 handle.update_ui(move |app, _| {
                     app.command_output = output.trim().to_string();
                 });
             }
         });
-    
+
         (app, Task::none())
     }
 
@@ -99,17 +70,11 @@ impl Application for YourApp {
         Some(Message::PopupClosed(id))
     }
 
-    /// This is the main view of your application, it is the root of your widget tree.
-    ///
-    /// The `Element` type is used to represent the visual elements of your application,
-    /// it has a `Message` associated with it, which dictates what type of message it can send.
-    ///
-    /// To get a better sense of which widgets are available, check out the `widget` module.
     fn view(&self) -> Element<Self::Message> {
-        widget::row()
-            .spacing(10)
-            .add(self.core.applet.icon_button("display-symbolic").on_press(Message::TogglePopup))
-            .add(widget::text(&self.command_output)) // Show command output
+        self.core
+            .applet
+            .icon_button("display-symbolic")
+            .on_press(Message::TogglePopup)
             .into()
     }
 
@@ -117,14 +82,14 @@ impl Application for YourApp {
         let content_list = widget::list_column()
             .padding(5)
             .spacing(0)
-            .push(widget::text(&self.command_output)); // Show output inside popup
+            .add(settings::item(
+                "Command Output:",
+                widget::text(&self.command_output),
+            ));
 
         self.core.applet.popup_container(content_list).into()
     }
 
-    /// Application messages are handled here. The application state can be modified based on
-    /// what message was received. Commands may be returned for asynchronous execution on a
-    /// background thread managed by the application's executor.
     fn update(&mut self, message: Self::Message) -> Task<Self::Message> {
         match message {
             Message::TogglePopup => {
@@ -154,6 +119,7 @@ impl Application for YourApp {
                 }
             }
             Message::ToggleExampleRow(toggled) => self.example_row = toggled,
+            Message::UpdateOutput(output) => self.command_output = output,
         }
         Task::none()
     }
