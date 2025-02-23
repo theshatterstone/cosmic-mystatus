@@ -7,6 +7,10 @@ use cosmic::iced_winit::commands::popup::{destroy_popup, get_popup};
 use cosmic::widget::{self, settings};
 use cosmic::{Application, Element};
 
+use std::process::Command;
+use tokio::time::{interval, Duration};
+
+
 use crate::fl;
 
 /// This is the struct that represents your application.
@@ -19,6 +23,7 @@ pub struct YourApp {
     popup: Option<Id>,
     /// Example row toggler.
     example_row: bool,
+    command_output: String, // New field for storing output
 }
 
 /// This is the enum that contains all the possible variants that your application will need to transmit messages.
@@ -64,11 +69,29 @@ impl Application for YourApp {
     /// - `flags` is used to pass in any data that your application needs to use before it starts.
     /// - `Command` type is used to send messages to your application. `Command::none()` can be used to send no messages to your application.
     fn init(core: Core, _flags: Self::Flags) -> (Self, Task<Self::Message>) {
-        let app = YourApp {
+        let mut app = YourApp {
             core,
+            command_output: "Fetching...".to_string(),
             ..Default::default()
         };
-
+    
+        let handle = app.core.handle().clone();
+        tokio::spawn(async move {
+            let mut timer = interval(Duration::from_secs(5)); // Update every 5 seconds
+            loop {
+                timer.tick().await;
+                let output = Command::new("date") // Replace "date" with your command
+                    .output()
+                    .ok()
+                    .and_then(|o| String::from_utf8(o.stdout).ok())
+                    .unwrap_or_else(|| "Error".to_string());
+    
+                handle.update_ui(move |app, _| {
+                    app.command_output = output.trim().to_string();
+                });
+            }
+        });
+    
         (app, Task::none())
     }
 
@@ -83,10 +106,10 @@ impl Application for YourApp {
     ///
     /// To get a better sense of which widgets are available, check out the `widget` module.
     fn view(&self) -> Element<Self::Message> {
-        self.core
-            .applet
-            .icon_button("display-symbolic")
-            .on_press(Message::TogglePopup)
+        widget::row()
+            .spacing(10)
+            .add(self.core.applet.icon_button("display-symbolic").on_press(Message::TogglePopup))
+            .add(widget::label(&self.command_output)) // Show command output
             .into()
     }
 
@@ -94,10 +117,7 @@ impl Application for YourApp {
         let content_list = widget::list_column()
             .padding(5)
             .spacing(0)
-            .add(settings::item(
-                fl!("example-row"),
-                widget::toggler(self.example_row).on_toggle(Message::ToggleExampleRow),
-            ));
+            .add(widget::label(&self.command_output)); // Show output inside popup
 
         self.core.applet.popup_container(content_list).into()
     }
