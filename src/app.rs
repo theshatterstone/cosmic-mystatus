@@ -96,7 +96,7 @@ impl Application for YourApp {
                     .ok()
                     .and_then(|o| String::from_utf8(o.stdout).ok())
                     .unwrap_or_else(|| "Error".to_string());
-                return Task::message(Message::UpdateOutput(output.trim().to_string()));
+                return Task::done(Message::UpdateOutput(output.trim().to_string()));
             }
         }
         Task::none()
