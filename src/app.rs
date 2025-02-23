@@ -12,7 +12,7 @@ pub fn run() -> cosmic::iced::Result {
     cosmic::applet::run::<StatusApplet>(())
 }
 
-struct StatusApplet {
+pub struct StatusApplet {
     core: cosmic::app::Core,
     output: String,
 }
