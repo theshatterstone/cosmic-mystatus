@@ -1,5 +1,5 @@
 use cosmic::app::{Core, Task};
-use cosmic::iced::{Element, Subscription};
+use cosmic::iced::{Subscription, Renderer};
 use cosmic::iced::widget::text;
 use cosmic::Theme;
 use std::process::Command;
@@ -65,7 +65,7 @@ impl cosmic::Application for YourApp {
         Task::none()
     }
 
-    fn view(&self) -> cosmic::iced_core::Element<'_, Self::Message, cosmic::Theme, iced_tiny_skia::Renderer> {
+    fn view(&self) -> cosmic::iced_core::Element<'_, Self::Message, cosmic::Theme, cosmic::iced::Renderer> {
         text(&self.command_output).into()
     }
 }
