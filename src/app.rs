@@ -80,7 +80,7 @@ impl Application for YourApp {
             let mut timer = interval(Duration::from_secs(5)); // Update every 5 seconds
             loop {
                 timer.tick().await;
-                let output = Command::new("date") // Replace "date" with your command
+                let output = Command::new("i3status") // Replace "date" with your command
                     .output()
                     .ok()
                     .and_then(|o| String::from_utf8(o.stdout).ok())
@@ -109,7 +109,7 @@ impl Application for YourApp {
         widget::row()
             .spacing(10)
             .add(self.core.applet.icon_button("display-symbolic").on_press(Message::TogglePopup))
-            .add(widget::label(&self.command_output)) // Show command output
+            .add(widget::text(&self.command_output)) // Show command output
             .into()
     }
 
@@ -117,7 +117,7 @@ impl Application for YourApp {
         let content_list = widget::list_column()
             .padding(5)
             .spacing(0)
-            .add(widget::label(&self.command_output)); // Show output inside popup
+            .add(widget::text(&self.command_output)); // Show output inside popup
 
         self.core.applet.popup_container(content_list).into()
     }
