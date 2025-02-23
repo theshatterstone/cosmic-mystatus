@@ -1,35 +1,30 @@
-// SPDX-License-Identifier: GPL-3.0-only
-
 use cosmic::app::{Core, Task};
-use cosmic::iced::window::Id;
-use cosmic::iced::Limits;
-use cosmic::iced_winit::commands::popup::{destroy_popup, get_popup};
-use cosmic::widget::{self, settings};
+use cosmic::iced::subscription;
+use cosmic::iced::time::{Duration, Instant};
+use cosmic::iced::Subscription;
+use cosmic::widget;
 use cosmic::{Application, Element};
 use std::process::Command;
-use tokio::time::{interval, Duration};
 
+/// Struct representing the applet
 #[derive(Default)]
 pub struct YourApp {
     core: Core,
-    popup: Option<Id>,
-    example_row: bool,
     command_output: String,
 }
 
+/// Messages for event handling
 #[derive(Debug, Clone)]
 pub enum Message {
-    TogglePopup,
-    PopupClosed(Id),
-    ToggleExampleRow(bool),
     UpdateOutput(String),
+    Tick(Instant),
 }
 
 impl Application for YourApp {
     type Executor = cosmic::executor::Default;
-    type Flags = (); 
+    type Flags = ();
     type Message = Message;
-    const APP_ID: &'static str = "com.example.CosmicAppletTemplate";
+    const APP_ID: &'static str = "com.example.CosmicCommandApplet";
 
     fn core(&self) -> &Core {
         &self.core
@@ -72,9 +67,5 @@ impl Application for YourApp {
 
     fn view(&self) -> Element<Self::Message> {
         widget::text(&self.command_output).into()
-    }
-
-    fn style(&self) -> Option<cosmic::iced_runtime::Appearance> {
-        Some(cosmic::applet::style())
     }
 }
