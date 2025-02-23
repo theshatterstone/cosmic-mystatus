@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=COSMIC Applet Template
+Name=COSMIC MyStatus
 Exec=cosmic-applet-template %F
 Terminal=false
 Type=Application
