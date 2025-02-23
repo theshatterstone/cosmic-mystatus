@@ -28,7 +28,7 @@ impl cosmic::Application for StatusApplet {
     type Message = Message;
     type Executor = cosmic::SingleThreadExecutor;
 
-    const APP_ID: &'static str = "io.github.yourname.cosmic-status-applet";
+    const APP_ID: &'static str = "io.github.theshatterstone.cosmic-mystatus";
 
     fn init(
         core: app::Core,
@@ -71,10 +71,14 @@ impl cosmic::Application for StatusApplet {
 }
 
 fn run_i3status() -> BoxStream<'static, Message> {
+    let config_path = std::env::var("XDG_CONFIG_HOME")
+        .unwrap_or_else(|_| format!("{}/.config", std::env::var("HOME").unwrap()))
+        + "/i3status/config";
+
     Box::pin(stream::unfold((), move |_| async {
         let process = Command::new("i3status")
             .arg("-c")
-            .arg("/home/aleks/.config/i3status/config") // Custom config path
+            .arg(config_path.clone()) // Use the resolved config path
             .stdout(Stdio::piped())
             .spawn()
             .expect("Failed to start i3status");
@@ -90,3 +94,4 @@ fn run_i3status() -> BoxStream<'static, Message> {
         None
     }))
 }
+
