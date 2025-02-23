@@ -80,6 +80,7 @@ fn run_i3status() -> BoxStream<'static, Message> {
             .arg("-c")
             .arg(&config_path) // Use reference to state variable
             .stdout(Stdio::piped())
+            .stderr(Stdio::null())    // Suppress standard error
             .spawn()
             .expect("Failed to start i3status");
 
