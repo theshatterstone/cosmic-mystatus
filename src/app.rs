@@ -75,7 +75,7 @@ impl Application for YourApp {
             ..Default::default()
         };
     
-        let handle = app.core.handle().clone();
+        let handle = app.core.applet.handle().clone();
         tokio::spawn(async move {
             let mut timer = interval(Duration::from_secs(5)); // Update every 5 seconds
             loop {
@@ -117,7 +117,7 @@ impl Application for YourApp {
         let content_list = widget::list_column()
             .padding(5)
             .spacing(0)
-            .add(widget::text(&self.command_output)); // Show output inside popup
+            .push(widget::text(&self.command_output)); // Show output inside popup
 
         self.core.applet.popup_container(content_list).into()
     }
