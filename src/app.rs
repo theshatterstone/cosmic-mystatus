@@ -3,7 +3,7 @@ use std::io::{BufRead, BufReader};
 use cosmic::{
     app,
     iced::{
-        widget::text, Element, Subscription, Task,
+        widget::text, Element, Subscription, Task, Renderer,
         futures::stream::{self, BoxStream, StreamExt},
     },
 };
@@ -33,13 +33,13 @@ impl cosmic::Application for StatusApplet {
     fn init(
         core: app::Core,
         _flags: Self::Flags,
-    ) -> (Self, Task<app::Message<Self::Message>>) {
+    ) -> (Self, Task<cosmic::app::Message<Self::Message>>) {
         (
             Self {
                 core,
                 latest_output: String::from("Loading..."),
             },
-            Task::perform(run_i3status(), Message::UpdateOutput),
+            Task::none(),
         )
     }
 
@@ -52,10 +52,10 @@ impl cosmic::Application for StatusApplet {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        Subscription::from_stream(run_i3status())
+        Subscription::run(run_i3status)
     }
 
-    fn update(&mut self, message: Message) -> Task<app::Message<Self::Message>> {
+    fn update(&mut self, message: Message) -> Task<cosmic::app::Message<Self::Message>> {
         match message {
             Message::UpdateOutput(output) => {
                 self.latest_output = output;
@@ -64,13 +64,13 @@ impl cosmic::Application for StatusApplet {
         Task::none()
     }
 
-    fn view(&self) -> cosmic::iced_core::Element<'_, Self::Message, cosmic::Theme, cosmic::iced_tiny_skia::Renderer> {
+    fn view(&self) -> Element<'_, Self::Message, cosmic::Theme, Renderer> {
         let content = text(&self.latest_output).size(16);
         autosize::autosize(content, cosmic::widget::Id::unique()).into()
     }
 }
 
-fn run_i3status() -> BoxStream<'static, String> {
+fn run_i3status() -> BoxStream<'static, Message> {
     Box::pin(stream::unfold((), move |_| async {
         let process = Command::new("i3status")
             .arg("-c")
@@ -84,7 +84,7 @@ fn run_i3status() -> BoxStream<'static, String> {
 
         let mut lines = reader.lines();
         while let Some(Ok(line)) = lines.next() {
-            return Some((line, ()));
+            return Some((Message::UpdateOutput(line), ()));
         }
 
         None
