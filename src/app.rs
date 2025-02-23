@@ -75,10 +75,10 @@ fn run_i3status() -> BoxStream<'static, Message> {
         .unwrap_or_else(|_| format!("{}/.config", std::env::var("HOME").unwrap()))
         + "/i3status/config";
 
-    Box::pin(stream::unfold((), move |_| async {
+    Box::pin(stream::unfold(config_path, |config_path| async move {
         let process = Command::new("i3status")
             .arg("-c")
-            .arg(config_path.clone()) // Use the resolved config path
+            .arg(&config_path) // Use reference to state variable
             .stdout(Stdio::piped())
             .spawn()
             .expect("Failed to start i3status");
@@ -87,11 +87,12 @@ fn run_i3status() -> BoxStream<'static, Message> {
         let reader = BufReader::new(stdout);
 
         let mut lines = reader.lines();
-        while let Some(Ok(line)) = lines.next() {
-            return Some((Message::UpdateOutput(line), ()));
+        if let Some(Ok(line)) = lines.next() {
+            return Some((Message::UpdateOutput(line), config_path));
         }
 
         None
     }))
 }
+
 
